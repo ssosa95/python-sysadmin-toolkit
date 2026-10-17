@@ -3,6 +3,12 @@ from log_analyser import parse_log
 from smtp_alert import send_alert, load_config
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python log_alert.py <logfile>")
+        sys.exit(1)
+    
+    log_filepath = sys.argv[1]
+
     ok, result = load_config()
     if not ok:
         print(result)
@@ -10,7 +16,6 @@ if __name__ == "__main__":
 
     configs = result
     
-    log_filepath = 'test_bad.log'
     try:
         total_entries, infos, warnings, errors = parse_log(log_filepath)
     except FileNotFoundError:
