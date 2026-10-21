@@ -20,7 +20,7 @@ def parse_log(filepath):
             
             if status == "INFO":
                     infos.append(f"{date} - {time} - {message}")
-                    total_entries.append(1)
+                    total_entries.append(1) # adds 1 to the list so len(total_entries) returns the number inside list
                 
             elif status == "WARNING":
                     warnings.append(f"{date} - {time} - {message}")
