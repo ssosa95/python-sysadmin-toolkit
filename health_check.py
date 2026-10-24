@@ -40,6 +40,13 @@ def check_disk(host, user, key_path, path="/"):
     except OSError as e:
         return False, f"Error, {host} failed: {e}"
 
-
-
-
+def check_all(servers_file, user, key_path, disk_path="/"):
+    results = []
+    with open(servers_file, "r") as file:
+        for line in file:
+            host = line.strip()
+            if not host:
+                continue
+            ok, result = check_disk(host, user, key_path, disk_path)
+            results.append((host, ok, result))
+    return results
