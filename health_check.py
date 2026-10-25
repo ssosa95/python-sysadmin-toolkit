@@ -50,3 +50,25 @@ def check_all(servers_file, user, key_path, disk_path="/"):
             ok, result = check_disk(host, user, key_path, disk_path)
             results.append((host, ok, result))
     return results
+
+def build_report(results, threshold):
+    report_lines = []
+    for host, ok, result in results:
+        if not ok:
+            report_lines.append(f"UNKNOWN | Host: {host} | Error: {result}")
+        else:
+            usage = result
+            if usage >= threshold:
+                report_lines.append(f"WARNING | Host: {host} | Disk usage: {usage}% (above threshold)")
+            else:
+                report_lines.append(f"OK | Host: {host} | Disk usage: {usage}%")
+    return "\n".join(report_lines)
+
+def find_problems(results, threshold):
+    problem_list = []
+    for host, ok, result in results:
+        if not ok or result >= threshold:
+            problem_list.append((host, ok, result))
+            
+
+    return problem_list
