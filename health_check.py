@@ -1,4 +1,23 @@
 import paramiko
+import os
+
+def load_ssh_config():
+    user = os.environ.get("HEALTH_SSH_USER", None)
+    key_path = os.environ.get("HEALTH_SSH_KEY_PATH", None)
+    
+    if not user:
+        return False, "Config error: HEALTH_SSH_USER is not configured. Please check and review."
+    
+    if not key_path:
+        return False, "Config error: HEALTH_SSH_KEY_PATH is not configured. Please check and review."
+
+    if not os.path.isfile(key_path):
+        return False, f"Config error: SSH key file not found at {key_path}. Please check and review."
+    
+    return True, {"user": user, "key_path": key_path}
+
+def is_over(usage, threshold):
+    return usage >= threshold
 
 def parse_usage(output):
     lines = output.splitlines()
@@ -58,7 +77,7 @@ def build_report(results, threshold):
             report_lines.append(f"UNKNOWN | Host: {host} | Error: {result}")
         else:
             usage = result
-            if usage >= threshold:
+            if is_over(usage, threshold):
                 report_lines.append(f"WARNING | Host: {host} | Disk usage: {usage}% (above threshold)")
             else:
                 report_lines.append(f"OK | Host: {host} | Disk usage: {usage}%")
@@ -67,7 +86,7 @@ def build_report(results, threshold):
 def find_problems(results, threshold):
     problem_list = []
     for host, ok, result in results:
-        if not ok or result >= threshold:
+        if not ok or is_over(result, threshold):
             problem_list.append((host, ok, result))
             
 
