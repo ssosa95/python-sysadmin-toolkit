@@ -1,5 +1,12 @@
 import paramiko
 import os
+import sys
+from smtp_alert import load_config, send_alert
+
+EXIT_OK = 0
+EXIT_PROBLEMS = 1
+EXIT_BAD_SETUP = 2
+EXIT_EMAIL_FAILED = 3
 
 def load_ssh_config():
     user = os.environ.get("HEALTH_SSH_USER", None)
@@ -59,7 +66,7 @@ def check_disk(host, user, key_path, path="/"):
     except OSError as e:
         return False, f"Error, {host} failed: {e}"
 
-def check_all(servers_file, user, key_path, disk_path="/"):
+def check_all(servers_file, user, key_path, disk_path):
     results = []
     with open(servers_file, "r") as file:
         for line in file:
@@ -91,3 +98,63 @@ def find_problems(results, threshold):
             
 
     return problem_list
+
+if __name__ == "__main__":
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
+        print("Usage: python health_check.py <servers_file> <threshold> <optional: path>")
+        sys.exit(EXIT_BAD_SETUP)
+    
+    servers_file = sys.argv[1]
+    try:
+        threshold = int(sys.argv[2])
+    except ValueError:
+        print("Threshold must be an integer.")
+        sys.exit(EXIT_BAD_SETUP)
+
+    if threshold <= 0 or threshold > 100:
+        print("Threshold must be an integer between 1 and 100.")
+        sys.exit(EXIT_BAD_SETUP)
+
+    if len(sys.argv) < 4:
+        disk_path = "/"
+    else:
+        disk_path = sys.argv[3]
+
+    ok, result = load_ssh_config()
+    if not ok:
+        print(result)
+        sys.exit(EXIT_BAD_SETUP)
+
+    ssh_config = result
+    user = ssh_config["user"]
+    key_path = ssh_config["key_path"]
+
+    ok, result = load_config()
+    if not ok:
+        print(result)
+        sys.exit(EXIT_BAD_SETUP)
+    try:
+        results = check_all(servers_file, user, key_path, disk_path)
+    except FileNotFoundError:
+        print(f"Servers file {servers_file} was not found. Please enter a correct filepath.")
+        sys.exit(EXIT_BAD_SETUP)
+    if not results:
+        print(f"No servers found in {servers_file}. Please check the file.")
+        sys.exit(EXIT_BAD_SETUP)
+    report = build_report(results, threshold)
+    print(report)
+
+    problems = find_problems(results, threshold)
+    
+    if problems:
+        configs = result
+        subject = f"{len(problems)} problems found, please check."
+        body = f"Disk usage issues detected:\n\n{report}"
+        success, message = send_alert(configs, subject, body)
+        
+        if not success:
+            print(f"Error sending alert email: {message}")
+            sys.exit(EXIT_EMAIL_FAILED)
+        else:
+            print(f"Alert email sent successfully: {message}")
+            sys.exit(EXIT_PROBLEMS)
