@@ -148,6 +148,7 @@ if __name__ == "__main__":
     if not ok:
         print(result)
         sys.exit(EXIT_BAD_SETUP)
+    configs = result
     try:
         results = check_all(servers_file, user, key_path, disk_path)
     except FileNotFoundError:
@@ -165,7 +166,6 @@ if __name__ == "__main__":
     problems = find_problems(results, threshold)
     
     if problems:
-        configs = result
         subject = f"{len(problems)} problem(s) found, please check."
         body = f"Disk usage issues detected:\n\n{report}"
         success, message = send_alert(configs, subject, body)
