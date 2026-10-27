@@ -2,11 +2,26 @@ import paramiko
 import os
 import sys
 from smtp_alert import load_config, send_alert
+from datetime import datetime
 
 EXIT_OK = 0
 EXIT_PROBLEMS = 1
 EXIT_BAD_SETUP = 2
 EXIT_EMAIL_FAILED = 3
+report_filepath = "no_such_folder/health_check_report.log"
+
+def write_report(report_filepath, report):
+    try:
+        with open(report_filepath, 'a') as file:
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            file.write(f"{now}:\n{report}\n\n")
+        return True, f"Report written to {report_filepath}"
+    except FileNotFoundError:
+        return False, f"Report file {report_filepath} was not found. Please enter a correct filepath."
+    except PermissionError:
+        return False, f"Permission denied when writing to report file ({report_filepath}). Please check permissions."
+    except OSError as e:
+        return False, f"Error writing to report file ({report_filepath}): {e}"
 
 def load_ssh_config():
     user = os.environ.get("HEALTH_SSH_USER", None)
@@ -143,12 +158,15 @@ if __name__ == "__main__":
         sys.exit(EXIT_BAD_SETUP)
     report = build_report(results, threshold)
     print(report)
+    report_ok, report_message = write_report(report_filepath, report)
+    if not report_ok:
+        print(report_message)
 
     problems = find_problems(results, threshold)
     
     if problems:
         configs = result
-        subject = f"{len(problems)} problems found, please check."
+        subject = f"{len(problems)} problem(s) found, please check."
         body = f"Disk usage issues detected:\n\n{report}"
         success, message = send_alert(configs, subject, body)
         
@@ -156,5 +174,8 @@ if __name__ == "__main__":
             print(f"Error sending alert email: {message}")
             sys.exit(EXIT_EMAIL_FAILED)
         else:
-            print(f"Alert email sent successfully: {message}")
+            print(f"{report_message} Alert email sent successfully: {message}")
             sys.exit(EXIT_PROBLEMS)
+    else:
+        print(f"{report_message} No problems detected. No email sent.")
+        sys.exit(EXIT_OK)
