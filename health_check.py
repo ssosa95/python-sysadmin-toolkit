@@ -8,7 +8,7 @@ EXIT_OK = 0
 EXIT_PROBLEMS = 1
 EXIT_BAD_SETUP = 2
 EXIT_EMAIL_FAILED = 3
-report_filepath = "no_such_folder/health_check_report.log"
+report_filepath = "health_check_report.log"
 
 def write_report(report_filepath, report):
     try:
