@@ -174,8 +174,8 @@ if __name__ == "__main__":
             print(f"Error sending alert email: {message}")
             sys.exit(EXIT_EMAIL_FAILED)
         else:
-            print(f"{report_message} Alert email sent successfully: {message}")
+            print(f"Alert email sent successfully: {message}")
             sys.exit(EXIT_PROBLEMS)
     else:
-        print(f"{report_message} No problems detected. No email sent.")
+        print("No problems detected. No email sent.")
         sys.exit(EXIT_OK)
