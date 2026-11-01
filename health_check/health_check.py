@@ -3,6 +3,7 @@ import os
 import sys
 from smtp_alert import load_config, send_alert
 from datetime import datetime
+import shlex
 
 EXIT_OK = 0
 EXIT_PROBLEMS = 1
@@ -60,7 +61,7 @@ def check_disk(host, user, key_path, path="/"):
         with paramiko.SSHClient() as client:
             client.load_system_host_keys()
             client.connect(host, port=22, username=user, key_filename=key_path, timeout=10)
-            stdin, stdout, stderr = client.exec_command(f"df -P {path}", timeout=10)
+            stdin, stdout, stderr = client.exec_command(f"df -P {shlex.quote(path)}", timeout=10)
             output = stdout.read().decode()
             exit_status = stdout.channel.recv_exit_status()
             if exit_status != 0:
