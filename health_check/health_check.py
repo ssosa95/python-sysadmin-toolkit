@@ -149,12 +149,18 @@ if __name__ == "__main__":
     if not ok:
         print(result)
         sys.exit(EXIT_BAD_SETUP)
+    
     configs = result
+    
     try:
         results = check_all(servers_file, user, key_path, disk_path)
     except FileNotFoundError:
         print(f"Servers file {servers_file} was not found. Please enter a correct filepath.")
         sys.exit(EXIT_BAD_SETUP)
+    except OSError as e:
+        print(f"Error reading servers file {servers_file}: {e}")
+        sys.exit(EXIT_BAD_SETUP)
+    
     if not results:
         print(f"No servers found in {servers_file}. Please check the file.")
         sys.exit(EXIT_BAD_SETUP)
