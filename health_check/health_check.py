@@ -65,7 +65,7 @@ def check_disk(host, user, key_path, path="/"):
             exit_status = stdout.channel.recv_exit_status()
             if exit_status != 0:
                 output = stderr.read().decode().strip()
-                return False, f"Host: {host} | Error: {output} | Exit code: {exit_status}"
+                return False, f"{output} | Exit code: {exit_status}"
             
             ok, result = parse_usage(output)        
             
