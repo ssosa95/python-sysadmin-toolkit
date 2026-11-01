@@ -71,7 +71,7 @@ def check_disk(host, user, key_path, path="/"):
             ok, result = parse_usage(output)        
             
             if not ok:
-                return False, f"Host: {host} | Error: {result}"
+                return False, result
             
             return True, result
 
