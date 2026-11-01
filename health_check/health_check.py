@@ -9,7 +9,7 @@ EXIT_OK = 0
 EXIT_PROBLEMS = 1
 EXIT_BAD_SETUP = 2
 EXIT_EMAIL_FAILED = 3
-report_filepath = "health_check_report.log"
+REPORT_FILEPATH = "health_check_report.log"
 
 def write_report(report_filepath, report):
     try:
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         sys.exit(EXIT_BAD_SETUP)
     report = build_report(results, threshold)
     print(report)
-    report_ok, report_message = write_report(report_filepath, report)
+    report_ok, report_message = write_report(REPORT_FILEPATH, report)
     if not report_ok:
         print(report_message)
 
